@@ -13,5 +13,7 @@ web/
 !/plugins/signaling_examples.py
 !/plugins/system_update.py
 !/plugins/plugin_manager.py
+!/plugins/flow_sensors.py
 /plugins/manifests/*
 !/plugins/manifests/proto.manifest
+/.vscode
