@@ -67,7 +67,7 @@ $code:
                     if (minutes < 10) {minutes = "0"+minutes;}
                     if (seconds < 10) {seconds = "0"+seconds;}
                     if (station.status == "on") {
-                        display = minutes+":"+seconds;
+                        display = minutes+":"+seconds+" "+station.flowRate+" gph"+" "+station.flowAmt+" gallons";
                     } else {
                         display = "(" + minutes+":"+seconds + ")";
                     }

@@ -104,7 +104,7 @@ class change_values(ProtectedPage):
 
     def GET(self):
         qdict = web.input()
-        print 'qdict: ', qdict
+        print('qdict: ', qdict)
         if 'rsn' in qdict and qdict['rsn'] == '1':
             stop_stations()
             raise web.seeother('/')
@@ -526,7 +526,7 @@ class api_status(ProtectedPage):
                     sbit = (gv.sbits[bid] >> s) & 1
                     irbit = (gv.sd['ir'][bid] >> s) & 1
                     status = {'station': sid, 'status': 'disabled', 'reason': '', 'master': 0, 'programName': '',
-                              'remaining': 0}
+                              'remaining': 0, 'flowRate':gv.plugin_data["fs"]["rates"][sid], 'flowAmt':gv.plugin_data["fs"]["program_amounts"][sid]}
                     if gv.sd['en'] == 1:
                         if sbit:
                             status['status'] = 'on'
