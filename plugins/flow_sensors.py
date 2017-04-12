@@ -88,10 +88,10 @@ def reset_flow_sensors():
     elif arduino_usbserial_flow_sensors:
         serial_ch = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
         gv.plugin_data['fs']['serial_chan'] = serial_ch
-        time.sleep(1)
+        time.sleep(0.1)
         serial_ch.write("RS\n")
         serial_ch.flush()
-        time.sleep(1)
+        time.sleep(0.1)
         print("values from Arduino on establishing serial port")
         print(serial_ch.readline())
         return True
