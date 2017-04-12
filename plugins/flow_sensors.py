@@ -13,20 +13,27 @@
 # specs for the flow sensor.  This pulse is used to increment a software counter on
 # the Arudino or RPi using an interrupt routine.
 
-# This plugin creates a thread that runs every N seconds (e.g. 5 seconds) that reads
+# This plugin creates a thread that runs every N seconds (e.g. 3 seconds) and that reads
 # this counter and determines both the current flow rate (liters or gallons per hour)
-# by comparing the current count
-# to the last time it was read and using the elapsed time between counter reads.  It also
-# computes the total amount of water flow (in liters or gallons) since the counter
-# was reset.
+# and the total amount of water flow (in liters or gallons) since the counter was reset.
 
 # The flow rates and flow amounts for each line (valve) is stored in a gv.plugin_data['fs']
 # dictionary.
 
-# Longer term, this plugin should include a webpage that shows tables/graphs of water usage
-# for each line/valve and over various timeframes.
+# TODO: put selection of sensor_type and units into SIP Options or on the Plugin's webpage
+# TODO: update international language files for the word "Usage" (and any other required words??)
+# TODO: add graphs and tables to Plugin's webpage showing monthly usage, etc
+# TODO: to support longer term usage statistics we probably need to maintain a separate water usage
+#          log, for example one that contains the total by month for each valve.
+# TODO: decide whether to support flow_sensors directly connected to Pi or only via Arduino.
+# TODO: should we store flow amounts as milliLiters rather than Liters so we can use Ints not Floats?
+#           then convert to Liters/Gallons for display?
+# TODO: add ability to detect stuck or leaking valves by monitoring flow of from all valves
+#         even when no program is running
+# TODO: add mechanism to have usage logs sent to user via email, perhaps daily or weekly
+# TODO: we might need a Signal to designate that a program/run-once/manual-run has just completed.
+#         this could be used to update a usage logfile that we use for charts/tables
 
-# For example, when a program starts to run, the flow counter will be reset to zero
 import time
 import thread
 import random
@@ -38,13 +45,12 @@ print("flow sensors plugin loaded...")
 gv.plugin_data['fs'] = {}
 gv.plugin_data['fs']['rates'] = [0]*8
 
+# *** Set only one of these to True to determine how the flow_sensor counter values are obtained
 simulated_flow_sensors = False
 arduino_usbserial_flow_sensors = True
 gpio_flow_sensors = False
 
-# TODO: put selection of sensor_type and units into SIP Options
-# TODO: update international language files for the word "Usage"
-gv.plugin_data['fs']['sensor_type'] = 'Seeed 1/2 inch'
+gv.plugin_data['fs']['sensor_type'] = 'Seeed 1/2 inch' # or 'Seed 3/4 inch'
 gv.plugin_data['fs']['units'] = 'Liters' # 'Liters' or 'Gallons'
 if gv.plugin_data['fs']['units'] == 'Gallons':
     gv.plugin_data['fs']['rate_units'] = 'GpH'
@@ -55,11 +61,21 @@ else:
 # to get total amount, divide pulse count by the elapsed time in seconds and then
 # multiply by conversion table factor to get Total Liters or Total Gallons during
 # the elapsed time period.
-# DONE: check above description with math!!
 
-conversion_table = {'Seeed 1/2 inch': {'Liters': 60.0/7.5, 'Gallons': 60/7.5/3.78541}} 
+# TODO: for some valves like the 1/2" and 3/4" brass valves we may need an offset in addition to
+#         a multiplier value so the correct would have the form of Counter*Mult + Offset rather
+#         than just Counter*Mult.
+
+CONVERSION_MULTIPLIER = {'Seeed 1/2 inch': {'Liters': 60.0/7.5, 'Gallons': 60/7.5/3.78541},
+                         'Seeed 3/4 inch': {'Liters': 60.0/5.5, 'Gallons': 60/5.5/3.78541}}
+
+# TODO: add support for other types of RPi serial interfaces with different /dev/names
 
 def reset_flow_sensors():
+    """
+    Resets parameters used by this plugin for all three flow_sensor types.
+    Used at initialization and at the start of each Program/Run-Once 
+    """
     #print "resetting flow sensors"
     gv.plugin_data['fs']['start_time'] = time.time()
     gv.plugin_data['fs']['prev_read_time'] = time.time()
@@ -68,6 +84,7 @@ def reset_flow_sensors():
     if simulated_flow_sensors:
         gv.plugin_data['fs']['simulated_counters'] = [0]*8
         return True
+
     elif arduino_usbserial_flow_sensors:
         serial_ch = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
         gv.plugin_data['fs']['serial_chan'] = serial_ch
@@ -78,6 +95,7 @@ def reset_flow_sensors():
         print("values from Arduino on establishing serial port")
         print(serial_ch.readline())
         return True
+
     elif gpio_flow_sensors:
         pass
         return True
@@ -85,17 +103,24 @@ def reset_flow_sensors():
     return False
 
 def setup_flow_sensors():
+    """
+    Resets parameters used by this plugin for all three flow_sensor types.
+    Used at initialization and at the start of each Program/Run-Once
+    """
     reset_flow_sensors()
-    
-setup_flow_sensors()
 
 def read_flow_counters(reset=False):
+    """
+    Reads counters corresponding to each flow sensor.
+    Supports simulated flow sensors (for testing UI), flow sensors connected to an Arduino and
+      perhaps flow sensors connected directly to the Pi.
+    """
     if simulated_flow_sensors:
         if reset:
             gv.plugin_data['fs']['simulated_counters'] = [0]*8
         else:
-            gv.plugin_data['fs']['simulated_counters'] = [cntr + random.random()*0 + 10 for 
-                                                            cntr in gv.plugin_data['fs']['simulated_counters']]
+            gv.plugin_data['fs']['simulated_counters'] = [cntr + random.random()*40 + 180 for
+                                                          cntr in gv.plugin_data['fs']['simulated_counters']]
         return gv.plugin_data['fs']['simulated_counters']
 
     elif arduino_usbserial_flow_sensors:
@@ -109,53 +134,53 @@ def read_flow_counters(reset=False):
         time.sleep(0.1)
         line = serial_ch.readline().rstrip()
         print("serial input from Arduino is: " + line)
-        vals = map(int, line.split(','))   
+        vals = map(int, line.split(','))
         return vals
 
     elif gpio_flow_sensors:
         pass
         return [0]*8
+
     print("Flow Sensor Type Failed in Read")
     return False
 
-# DONE: check flow/amount calculations
-# TODO: add flow sensor gv values for rate and amount units (e.g. 'LpH', 'Liters')
-# TODO: and automatically insert the correct units in home HTML
-# DONE: check that flow_sensor plugin exists before trying to insert values in the webpages.py file
-
-# TODO: combine the following two functions into a single update_flow_values function
-def update_flow_rates():
+def update_flow_values():
+    """
+    Updates gv values for the current flow rate and accumulated flow amount for each flow sensors.
+    """
     sensor_type = gv.plugin_data['fs']['sensor_type']
     units = gv.plugin_data['fs']['units']
     current_time = time.time()
-    elapsed_prev_read = current_time-gv.plugin_data['fs']['prev_read_time']
-    conv_mult = conversion_table[sensor_type][units]
-    curr_cntrs = read_flow_counters()
+
+    elapsed_prev_read = current_time - gv.plugin_data['fs']['prev_read_time']  # for flow rate
+    # print("elapsed time: " + str(elapsed_time))
+
+    conv_mult = CONVERSION_MULTIPLIER[sensor_type][units]
     prev_cntrs = gv.plugin_data['fs']['prev_read_cntrs']
-    gv.plugin_data['fs']['rates'] = [(cntr-prev_cntr)*conv_mult/elapsed_prev_read for
+
+    curr_cntrs = read_flow_counters()
+
+    gv.plugin_data['fs']['rates'] = [(cntr-prev_cntr)*conv_mult/elapsed_prev_read for \
                                      cntr, prev_cntr in zip(curr_cntrs, prev_cntrs)]
-    print("Rates:" + str(gv.plugin_data['fs']['rates']))
+    gv.plugin_data['fs']['program_amounts'] = [cntr*conv_mult/60/60 for cntr in curr_cntrs]
+
+    # print("Rates:" + str(gv.plugin_data['fs']['rates']))
+    # print("Amounts:" + str(gv.plugin_data['fs']['program_amounts']))
+
     gv.plugin_data['fs']['prev_read_time'] = current_time
     gv.plugin_data['fs']['prev_read_cntrs'] = curr_cntrs
-
-def update_flow_amounts():
-    sensor_type = gv.plugin_data['fs']['sensor_type']
-    units = gv.plugin_data['fs']['units']
-    current_time = time.time()
-    elapsed_time = current_time - gv.plugin_data['fs']['start_time']
-    print("elapsed time: " + str(elapsed_time))
-    prev_amounts = gv.plugin_data['fs']['program_amounts']
-    conv_mult = conversion_table[sensor_type][units]
-    gv.plugin_data['fs']['program_amounts'] = [cntr*conv_mult/60/60 for cntr in read_flow_counters()]
-    print("Amounts:" + str(gv.plugin_data['fs']['program_amounts']))
+   
 
 def flow_sensor_loop():
+    """
+    This tread will update the flow sensor values every N seconds.
+    """
     delta_t = 3.0 # seconds
     while True:
-        update_flow_rates()
-        update_flow_amounts()
+        update_flow_values()
         time.sleep(delta_t)
 
+setup_flow_sensors()
 thread.start_new_thread(flow_sensor_loop, ())
 
 ### Stations where sheduled to run ###
@@ -163,6 +188,10 @@ thread.start_new_thread(flow_sensor_loop, ())
 #       - A program is run (Scheduled or "run now")
 #       - Stations are manually started with RunOnce
 def notify_station_scheduled(name, **kw):
+    """
+    Subscribes to the stations_scheduled signal and used to reset the flow_sensor counters
+      and flow rate/amount values in the gv.
+    """
     reset_flow_sensors()
     print("Some stations have been scheduled: {}".format(str(gv.rs)))
 program_started = signal('stations_scheduled')
