@@ -526,7 +526,12 @@ class api_status(ProtectedPage):
                     sbit = (gv.sbits[bid] >> s) & 1
                     irbit = (gv.sd['ir'][bid] >> s) & 1
                     status = {'station': sid, 'status': 'disabled', 'reason': '', 'master': 0, 'programName': '',
-                              'remaining': 0, 'flowRate':gv.plugin_data["fs"]["rates"][sid], 'flowAmt':gv.plugin_data["fs"]["program_amounts"][sid]}
+                        'remaining': 0}
+                    if "fs" in gv.plugin_data:
+                        status['flowRate'] = gv.plugin_data["fs"]["rates"][sid]
+                        status['flowAmt'] = gv.plugin_data["fs"]["program_amounts"][sid]
+                        status['rateUnits'] = gv.plugin_data["fs"]["rate_units"]
+                        status['units'] = gv.plugin_data["fs"]["units"]
                     if gv.sd['en'] == 1:
                         if sbit:
                             status['status'] = 'on'
@@ -605,11 +610,11 @@ class water_log(ProtectedPage):
 
     def GET(self):
         records = read_log()
-        data = _("Date, Start Time, Zone, Duration, Program") + "\n"
+        data = _("Date, Start Time, Zone, Duration, Program, Usage") + "\n"
         for r in records:
             event = ast.literal_eval(json.dumps(r))
             data += event["date"] + ", " + event["start"] + ", " + str(event["station"]+1) + ", " + event[
-                "duration"] + ", " + event["program"] + "\n"
+                "duration"] + ", " + event["program"] + ", " + event["usage"] + "\n"
 
         web.header('Content-Type', 'text/csv')
         return data

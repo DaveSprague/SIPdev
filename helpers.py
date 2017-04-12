@@ -329,13 +329,15 @@ def log_run():
     
     If a record limit is specified (gv.sd['lr']) the number of records is truncated.  
     """
-
+    print "running log..."
     if gv.sd['lg']:
+        print "log enabled..."
         program = _('program')
         station = _('station')
         duration = _('duration')
         strt = _('start')
         date = _('date')
+        usage = _('usage')
         if gv.lrun[1] == 98:
             pgr = _('Run-once')
         elif gv.lrun[1] == 99:
@@ -343,11 +345,20 @@ def log_run():
         else:
             pgr = str(gv.lrun[1])
         start = time.gmtime(gv.now - gv.lrun[2])
+        if "fs" in gv.plugin_data:
+            sid = gv.lrun[0]
+            amount = '{:.3f}'.format(gv.plugin_data["fs"]["program_amounts"][sid])  # Liters or Gallons of water used
+        else:
+            amount = ''
+        print "constructing log line"
         logline = '{"'+program+'":"' + pgr + '","'+station+'":' + str(gv.lrun[0]) + ',"'+duration+'":"' + timestr(
-            gv.lrun[2]) + '","'+strt+'":"' + time.strftime('%H:%M:%S","'+date+'":"%Y-%m-%d"', start) + '}'
+            gv.lrun[2]) + '","'+strt+'":"' + time.strftime('%H:%M:%S","'+date+'":"%Y-%m-%d"', start) + ',"'+usage+'":"' + amount +'"}'
+        print("LOG LINE: " + logline)
         lines = []
         lines.append(logline + '\n')
+        print "reading log"
         log = read_log()
+        print "writing log"
         for r in log:
             lines.append(json.dumps(r) + '\n')
         with codecs.open('./data/log.json', 'w', encoding='utf-8') as f:
