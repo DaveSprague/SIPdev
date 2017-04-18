@@ -17,3 +17,6 @@ web/
 /plugins/manifests/*
 !/plugins/manifests/proto.manifest
 /.vscode
+.Apple*
+.DS_Store
+
