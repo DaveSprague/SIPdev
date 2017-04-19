@@ -55,12 +55,13 @@ $code:
         $for r in records:
             $ event = r #  ast.literal_eval(json.loads(r))
             <tr class="log_rec ${'odd' if odd else 'even'}">
-                <td align='center'>${event["date"]}</td>
-                <td align='center'>${formatTime(event["start"])}</td>
-                <td align='center'>${event["station"]}</td>
-                <td align='center'>${event["duration"]}</td>
-                <td align='center'>${event["program"]}</td>
-                <td align='center'>${event["usage"]}</td>
+                $for name, f in gv.logged_values:
+                    $if name == "start":
+                        <td align='center'>${formatTime(event[name])}</td>
+                    $elif name == "station":
+                        <td align='center'>${snames[int(event[name])]}</td>
+                    $else:
+                        <td align='center'>${event[name]}</td>
             </tr>
             $ odd = 1 - odd
     </table>

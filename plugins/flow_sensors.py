@@ -20,20 +20,6 @@
 # The flow rates and flow amounts for each line (valve) is stored in a gv.plugin_data['fs']
 # dictionary.
 
-# TODO: put selection of sensor_type and units into SIP Options or on the Plugin's webpage
-# TODO: update international language files for the word "Usage" (and any other required words??)
-# TODO: add graphs and tables to Plugin's webpage showing monthly usage, etc
-# TODO: to support longer term usage statistics we probably need to maintain a separate water usage
-#          log, for example one that contains the total by month for each valve.
-# TODO: decide whether to support flow_sensors directly connected to Pi or only via Arduino.
-# TODO: should we store flow amounts as milliLiters rather than Liters so we can use Ints not Floats?
-#           then convert to Liters/Gallons for display?
-# TODO: add ability to detect stuck or leaking valves by monitoring flow of from all valves
-#         even when no program is running
-# TODO: add mechanism to have usage logs sent to user via email, perhaps daily or weekly
-# TODO: we might need a Signal to designate that a program/run-once/manual-run has just completed.
-#         this could be used to update a usage logfile that we use for charts/tables
-
 import time
 import thread
 import random
@@ -56,6 +42,9 @@ if gv.plugin_data['fs']['units'] == 'Gallons':
     gv.plugin_data['fs']['rate_units'] = 'GpH'
 else:
     gv.plugin_data['fs']['rate_units'] = 'LpH'
+
+# add this plugin's log value to the SIP log
+gv.logged_values.append( [_('usage'), lambda : '{:.3f}'.format(plugin_data["fs"]["program_amounts"][lrun[0]]) ])
 
 # multiply conversion table value by pulses per second to get Liters or Gallons per hour
 # to get total amount, divide pulse count by the elapsed time in seconds and then
@@ -92,8 +81,8 @@ def reset_flow_sensors():
         serial_ch.write("RS\n")
         serial_ch.flush()
         time.sleep(0.1)
-        #print("values from Arduino on establishing serial port")
-        #print(serial_ch.readline())
+        print("values from Arduino on establishing serial port")
+        print(serial_ch.readline())
         return True
 
     elif gpio_flow_sensors:
@@ -131,9 +120,10 @@ def read_flow_counters(reset=False):
             serial_ch.write('RD\n')
         serial_ch.flush()
         #print("Writing to Arduino")
-        time.sleep(0.1)
+        time.sleep(0.2)
         line = serial_ch.readline().rstrip()
         #print("serial input from Arduino is: " + line)
+        #print("serial input has been printed")
         vals = map(int, line.split(','))
         return vals
 
