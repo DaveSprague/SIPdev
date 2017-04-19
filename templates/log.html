@@ -48,12 +48,8 @@ $code:
 
     <table class="logList">
         <tr class="log_rec">
-            <th>$_('Date')</th>
-            <th>$_('Start Time')</th>
-            <th>$_('Station')</th>
-            <th>$_('Duration')</th>
-            <th>$_('Program')</th>
-            <th>$_('Usage')</th>
+            $for name,f in gv.logged_values:
+                <th>$_(name.capitalize())</th>
         </tr>
         $ odd = 1
         $for r in records:

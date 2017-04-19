@@ -606,7 +606,7 @@ class api_log(ProtectedPage):
 
 
 class water_log(ProtectedPage):
-    """Simple Log API"""
+    """Simple Log API - output CSV file"""
 
     def GET(self):
         records = read_log()

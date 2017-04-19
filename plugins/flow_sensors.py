@@ -92,8 +92,8 @@ def reset_flow_sensors():
         serial_ch.write("RS\n")
         serial_ch.flush()
         time.sleep(0.1)
-        print("values from Arduino on establishing serial port")
-        print(serial_ch.readline())
+        #print("values from Arduino on establishing serial port")
+        #print(serial_ch.readline())
         return True
 
     elif gpio_flow_sensors:
@@ -130,10 +130,10 @@ def read_flow_counters(reset=False):
         else:
             serial_ch.write('RD\n')
         serial_ch.flush()
-        print("Writing to Arduino")
+        #print("Writing to Arduino")
         time.sleep(0.1)
         line = serial_ch.readline().rstrip()
-        print("serial input from Arduino is: " + line)
+        #print("serial input from Arduino is: " + line)
         vals = map(int, line.split(','))
         return vals
 
@@ -193,7 +193,7 @@ def notify_station_scheduled(name, **kw):
       and flow rate/amount values in the gv.
     """
     reset_flow_sensors()
-    print("Some stations have been scheduled: {}".format(str(gv.rs)))
+    #print("Some stations have been scheduled: {}".format(str(gv.rs)))
 program_started = signal('stations_scheduled')
 program_started.connect(notify_station_scheduled)
 

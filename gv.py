@@ -99,15 +99,26 @@ def timestr(t):
 
 # TODO: separate out Date and Time from Start
 logged_values=[]
-logged_values.append([_('program'), lambda :_('Run_once') if lrun[1] == 98
-                                            else (_('Manual') if lrun[1] == 99
-                                            else (str(lrun[1]))
-                                            ) ])
+
+logged_values.append([ _('date'), lambda :time.strftime('%Y-%m-%d', time.gmtime(now - lrun[2]))) ])
+
+logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S', time.gmtime(now - lrun[2])) ])
+
 logged_values.append([ _('station'), lambda : snames[lrun[0]] ])
 
 logged_values.append([ _('duration'), lambda : timestr(lrun[2]) ])
 
-logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S","'+_('date')+'":"%Y-%m-%d', time.gmtime(now - lrun[2])) ])
+logged_values.append([_('program'), lambda :_('Run_once') if lrun[1] == 98
+                                            else (_('Manual') if lrun[1] == 99
+                                            else (str(lrun[1]))
+                                            ) ])
+
+
+
+
+
+
+
 
 logged_values.append( [_('usage'), lambda : '{:.3f}'.format(plugin_data["fs"]["program_amounts"][lrun[0]]) ])
 
