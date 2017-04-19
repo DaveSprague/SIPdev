@@ -310,17 +310,17 @@ def get_cpu_temp(unit=None):
         return '!!'
 
 
-def timestr(t):
-    """
-    Convert duration in seconds to string in the form mm:ss.
+# def timestr(t):
+#     """
+#     Convert duration in seconds to string in the form mm:ss.
       
-    @type  t: int
-    @param t: duration in seconds
-    @rtype:   string
-    @return:  duration as "mm:ss"   
-    """
-    return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
-        (t % 60 >> 0) % 10)
+#     @type  t: int
+#     @param t: duration in seconds
+#     @rtype:   string
+#     @return:  duration as "mm:ss"   
+#     """
+#     return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
+#         (t % 60 >> 0) % 10)
 
 
 def log_run():
@@ -329,30 +329,19 @@ def log_run():
     
     If a record limit is specified (gv.sd['lr']) the number of records is truncated.  
     """
+
+    # TODO: add Type to gv.logged_values so that we can handle time format and integer values properly?
     print "running log..."
     if gv.sd['lg']:
         print "log enabled..."
-        program = _('program')
-        station = _('station')
-        duration = _('duration')
-        strt = _('start')
-        date = _('date')
-        usage = _('usage')
-        if gv.lrun[1] == 98:
-            pgr = _('Run-once')
-        elif gv.lrun[1] == 99:
-            pgr = _('Manual')
-        else:
-            pgr = str(gv.lrun[1])
-        start = time.gmtime(gv.now - gv.lrun[2])
-        if "fs" in gv.plugin_data:
-            sid = gv.lrun[0]
-            amount = '{:.3f}'.format(gv.plugin_data["fs"]["program_amounts"][sid])  # Liters or Gallons of water used
-        else:
-            amount = ''
+        
         print "constructing log line"
-        logline = '{"'+program+'":"' + pgr + '","'+station+'":' + str(gv.lrun[0]) + ',"'+duration+'":"' + timestr(
-            gv.lrun[2]) + '","'+strt+'":"' + time.strftime('%H:%M:%S","'+date+'":"%Y-%m-%d"', start) + ',"'+usage+'":"' + amount +'"}'
+        loglist = ['"'+name+'":"'+func()+'"' for name,func in gv.logged_values]
+        print "loglist = " + str(loglist)
+        logline = '{'
+        logline += ','.join(loglist)
+        logline += '}'
+
         print("LOG LINE: " + logline)
         lines = []
         lines.append(logline + '\n')

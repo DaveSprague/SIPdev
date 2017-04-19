@@ -7,6 +7,7 @@
 import subprocess
 from threading import RLock
 
+
 major_ver = 3
 minor_ver = 2
 old_count = 747
@@ -59,7 +60,7 @@ sd = {
     u"mas": 0,
     u"wl": 100,
     u"bsy": 0,
-    u"lg": u"",
+    u"lg": 1,
     u"urs": 0,
     u"nopts": 13,
     u"pwd": u"b3BlbmRvb3I=",
@@ -83,6 +84,33 @@ sd = {
     u"idd": 0,
     u"pigpio": 0
 }
+
+def timestr(t):
+    """
+    Convert duration in seconds to string in the form mm:ss.
+      
+    @type  t: int
+    @param t: duration in seconds
+    @rtype:   string
+    @return:  duration as "mm:ss"   
+    """
+    return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
+        (t % 60 >> 0) % 10)
+
+# TODO: separate out Date and Time from Start
+logged_values=[]
+logged_values.append([_('program'), lambda :_('Run_once') if lrun[1] == 98
+                                            else (_('Manual') if lrun[1] == 99
+                                            else (str(lrun[1]))
+                                            ) ])
+logged_values.append([ _('station'), lambda : snames[lrun[0]] ])
+
+logged_values.append([ _('duration'), lambda : timestr(lrun[2]) ])
+
+logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S","'+_('date')+'":"%Y-%m-%d', time.gmtime(now - lrun[2])) ])
+
+logged_values.append( [_('usage'), lambda : '{:.3f}'.format(plugin_data["fs"]["program_amounts"][lrun[0]]) ])
+
 
 try:
     with open('./data/sd.json', 'r') as sdf:  # A config file
