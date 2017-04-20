@@ -104,7 +104,7 @@ logged_values.append([ _('date'),  lambda :time.strftime('%Y-%m-%d', time.gmtime
 
 logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S', time.gmtime(now - lrun[2])) ])
 
-logged_values.append([ _('station'), lambda : lrun[0] ])
+logged_values.append([ _('station'), lambda : str(lrun[0]) ])
 
 logged_values.append([ _('duration'), lambda : timestr(lrun[2]) ])
 

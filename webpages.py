@@ -610,11 +610,17 @@ class water_log(ProtectedPage):
 
     def GET(self):
         records = read_log()
-        data = _("Date, Start Time, Zone, Duration, Program, Usage") + "\n"
+        data = _(", ".join([name.capitalize() for name,f in gv.logged_values])) + "\n"
         for r in records:
             event = ast.literal_eval(json.dumps(r))
-            data += event["date"] + ", " + event["start"] + ", " + str(event["station"]+1) + ", " + event[
-                "duration"] + ", " + event["program"] + ", " + event["usage"] + "\n"
+            event_list = []
+            for name,f in gv.logged_values:
+                if name == "station":
+                    event_list.append(gv.snames[int(event[name])])
+                else:
+                    event_list.append(event[name])
+            data += ", ".join(event_list)
+            data += "\n"
 
         web.header('Content-Type', 'text/csv')
         return data

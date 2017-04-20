@@ -44,7 +44,7 @@ else:
     gv.plugin_data['fs']['rate_units'] = 'LpH'
 
 # add this plugin's log value to the SIP log
-gv.logged_values.append( [_('usage'), lambda : '{:.3f}'.format(plugin_data["fs"]["program_amounts"][lrun[0]]) ])
+gv.logged_values.append( [_('usage'), lambda : '{:.3f}'.format(gv.plugin_data["fs"]["program_amounts"][gv.lrun[0]]) ])
 
 # multiply conversion table value by pulses per second to get Liters or Gallons per hour
 # to get total amount, divide pulse count by the elapsed time in seconds and then
