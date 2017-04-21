@@ -7,15 +7,12 @@ web/
 .idea
 /.settings
 /data/*.db
-/plugins/*
 !/plugins/proto.py
 !/plugins/mobile_app.py
 !/plugins/signaling_examples.py
 !/plugins/system_update.py
 !/plugins/plugin_manager.py
 !/plugins/flow_sensors.py
-/plugins/manifests/*
-!/plugins/manifests/proto.manifest
 /.vscode
 .Apple*
 .DS_Store

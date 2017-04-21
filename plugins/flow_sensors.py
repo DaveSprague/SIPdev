@@ -19,25 +19,75 @@
 
 # The flow rates and flow amounts for each line (valve) is stored in a gv.plugin_data['fs']
 # dictionary.
-
+import web  # web.py framework
+import gv  # Get access to SIP's settings
+from urls import urls  # Get access to ospi's URLs
+from ospi import template_render  #  Needed for working with web.py templates
+from webpages import ProtectedPage  # Needed for security
+import json  # for working with data file
 import time
 import thread
 import random
 import serial
-import gv
 from blinker import signal
+
+# Add new URLs to access classes in this plugin.
+urls.extend([
+    '/flow_sensors-sp', 'plugins.flow_sensors.settings',
+    '/flow_sensors-save', 'plugins.flow_sensors.save_settings'
+    ])
+
+gv.plugin_menu.append(['Flow Sensors Plugin', '/flow_sensors-sp'])
+mySettings = { }
+print "defined mySettings"
+mySettings = {'method': 'Simulated', 'sensor_type': 'Seeed 1/2 inch','units': 'Gallons' }
+print "my settings are: " + str(mySettings)
+
+class settings(ProtectedPage):
+    """
+    Load an html page for entering plugin settings.
+    """
+    
+    def GET(self):
+        global mySettings
+        print ("GET method in settings class")
+        try:
+            with open('./data/flow_sensors.json', 'r') as f:  # Read settings from json file if it exists
+                mySettings = json.load(f)
+                reset_flow_sensors()
+        except IOError:  # If file does not exist return empty value
+            print("No flow_sensors.json file")
+            print "my settings here are: " + str(mySettings)
+        return template_render.flow_sensors(mySettings)  # open settings page
+
+class save_settings(ProtectedPage):
+    """
+    Save user input to json file.
+    Will create or update file when SUBMIT button is clicked
+    CheckBoxes only appear in qdict if they are checked.
+    """
+    # TODO: fix update of mySettings with new settings values in qdict!!!
+    def GET(self):
+        global mySettings
+        qdict = web.input()  # Dictionary of values returned as query string from settings page.
+        print "qdict = " + str(qdict)  # for testing
+        print "mySettings : " + str(mySettings)
+        with open('./data/flow_sensors.json', 'w') as f:  # Edit: change name of json file
+             json.dump(qdict, f) # save to file
+             print "flow sensor settings file saved"
+             print "mySettings : " + str(mySettings)
+        raise web.seeother('/')  # Return user to home page.
+
+##################################################
+# The following code runs when the plugin is loaded
+###################################################
 
 print("flow sensors plugin loaded...")
 gv.plugin_data['fs'] = {}
 gv.plugin_data['fs']['rates'] = [0]*8
 
-# *** Set only one of these to True to determine how the flow_sensor counter values are obtained
-simulated_flow_sensors = False
-arduino_usbserial_flow_sensors = True
-gpio_flow_sensors = False
-
 gv.plugin_data['fs']['sensor_type'] = 'Seeed 1/2 inch' # or 'Seed 3/4 inch'
-gv.plugin_data['fs']['units'] = 'Liters' # 'Liters' or 'Gallons'
+gv.plugin_data['fs']['units'] = 'Gallons' # 'Liters' or 'Gallons'
 if gv.plugin_data['fs']['units'] == 'Gallons':
     gv.plugin_data['fs']['rate_units'] = 'GpH'
 else:
@@ -65,16 +115,18 @@ def reset_flow_sensors():
     Resets parameters used by this plugin for all three flow_sensor types.
     Used at initialization and at the start of each Program/Run-Once 
     """
-    #print "resetting flow sensors"
+    print "resetting flow sensors"
+    print "mySettings : " + str(mySettings)
     gv.plugin_data['fs']['start_time'] = time.time()
     gv.plugin_data['fs']['prev_read_time'] = time.time()
     gv.plugin_data['fs']['prev_read_cntrs'] = [0]*8
     gv.plugin_data['fs']['program_amounts'] = [0]*8
-    if simulated_flow_sensors:
+
+    if mySettings['method'] == 'Simulated':
         gv.plugin_data['fs']['simulated_counters'] = [0]*8
         return True
 
-    elif arduino_usbserial_flow_sensors:
+    elif mySettings['method'] == 'Arduino-Serial':
         serial_ch = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
         gv.plugin_data['fs']['serial_chan'] = serial_ch
         time.sleep(0.1)
@@ -86,7 +138,7 @@ def reset_flow_sensors():
         print(line)
         return True
 
-    elif gpio_flow_sensors:
+    elif mySettings['method'] == 'RaspberryPi-GPIO':
         pass
         return True
     print("Flow Sensor Type Failed in Reset")
@@ -105,7 +157,9 @@ def read_flow_counters(reset=False):
     Supports simulated flow sensors (for testing UI), flow sensors connected to an Arduino and
       perhaps flow sensors connected directly to the Pi.
     """
-    if simulated_flow_sensors:
+    print "reading flow sensors"
+    print "mySettings : " + str(mySettings)
+    if mySettings['method'] == 'Simulated':
         if reset:
             gv.plugin_data['fs']['simulated_counters'] = [0]*8
         else:
@@ -113,7 +167,7 @@ def read_flow_counters(reset=False):
                                                           cntr in gv.plugin_data['fs']['simulated_counters']]
         return gv.plugin_data['fs']['simulated_counters']
 
-    elif arduino_usbserial_flow_sensors:
+    elif mySettings['method'] == 'Arduino-Serial':
         serial_ch = gv.plugin_data['fs']['serial_chan']
         if reset:
             serial_ch.write('RS\n')
@@ -125,10 +179,13 @@ def read_flow_counters(reset=False):
         line = serial_ch.readline().rstrip()
         #print("serial input from Arduino is: " + line)
         #print("serial input has been printed")
-        vals = map(int, line.split(','))
+        if line == '':
+            return [0]*8
+        else:
+            vals = map(int, line.split(','))
         return vals
 
-    elif gpio_flow_sensors:
+    elif mySettings['method'] == 'RaspberryPi-GPIO':
         pass
         return [0]*8
 
