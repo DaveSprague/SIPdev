@@ -81,8 +81,9 @@ def reset_flow_sensors():
         serial_ch.write("RS\n")
         serial_ch.flush()
         time.sleep(0.1)
+        line = serial_ch.readline()
         print("values from Arduino on establishing serial port")
-        print(serial_ch.readline())
+        print(line)
         return True
 
     elif gpio_flow_sensors:
