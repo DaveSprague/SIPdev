@@ -56,7 +56,9 @@ $code:
             $ event = r #  ast.literal_eval(json.loads(r))
             <tr class="log_rec ${'odd' if odd else 'even'}">
                 $for name, f in gv.logged_values:
-                    $if name == "start":
+                    $if name not in event.keys():
+                        <td align='center'> ---- </td>
+                    $elif name == "start":
                         <td align='center'>${formatTime(event[name])}</td>
                     $elif name == "station":
                         <td align='center'>${snames[int(event[name])]}</td>
