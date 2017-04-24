@@ -527,11 +527,14 @@ class api_status(ProtectedPage):
                     irbit = (gv.sd['ir'][bid] >> s) & 1
                     status = {'station': sid, 'status': 'disabled', 'reason': '', 'master': 0, 'programName': '',
                         'remaining': 0}
+
+                    # TODO: change this to be a check to see if the flow_sensor plugin is installed!!
+                    # TODO: but when we uninstall or disable a plugin, we should remove it's global variables too, right?
                     if "fs" in gv.plugin_data:
                         status['flowRate'] = gv.plugin_data["fs"]["rates"][sid]
                         status['flowAmt'] = gv.plugin_data["fs"]["program_amounts"][sid]
-                        status['rateUnits'] = gv.plugin_data["fs"]["rate_units"]
-                        status['units'] = gv.plugin_data["fs"]["units"]
+                        status['rateUnits'] = gv.plugin_data["fs"]['settings']["rate_units"]
+                        status['units'] = gv.plugin_data["fs"]['settings']["units"]
                     if gv.sd['en'] == 1:
                         if sbit:
                             status['status'] = 'on'
