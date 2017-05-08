@@ -94,6 +94,7 @@ logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S', time.gmtim
 
 logged_values.append([ _('station'), lambda : str(lrun[0]) ])
 
+# from helpers import timestr   NOTE: this import causes a circular import issue so I've duplicated that function here
 # TODO: (David L Sprague) this function is copied from helpers.py becausing trying to import it cases a circular import issue
 def timestr(t):
     """
