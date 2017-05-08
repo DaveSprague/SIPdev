@@ -310,17 +310,17 @@ def get_cpu_temp(unit=None):
         return '!!'
 
 
-# def timestr(t):
-#     """
-#     Convert duration in seconds to string in the form mm:ss.
+def timestr(t):
+    """
+    Convert duration in seconds to string in the form mm:ss.
       
-#     @type  t: int
-#     @param t: duration in seconds
-#     @rtype:   string
-#     @return:  duration as "mm:ss"   
-#     """
-#     return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
-#         (t % 60 >> 0) % 10)
+    @type  t: int
+    @param t: duration in seconds
+    @rtype:   string
+    @return:  duration as "mm:ss"   
+    """
+    return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
+        (t % 60 >> 0) % 10)
 
 
 def log_run():

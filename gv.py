@@ -85,6 +85,16 @@ sd = {
     u"pigpio": 0
 }
 
+# TODO: separate out Date and Time from Start
+logged_values=[]
+
+logged_values.append([ _('date'),  lambda :time.strftime('%Y-%m-%d', time.gmtime(now - lrun[2])) ])
+
+logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S', time.gmtime(now - lrun[2])) ])
+
+logged_values.append([ _('station'), lambda : str(lrun[0]) ])
+
+# TODO: (David L Sprague) this function is copied from helpers.py becausing trying to import it cases a circular import issue
 def timestr(t):
     """
     Convert duration in seconds to string in the form mm:ss.
@@ -97,21 +107,11 @@ def timestr(t):
     return str((t / 60 >> 0) / 10 >> 0) + str((t / 60 >> 0) % 10) + ":" + str((t % 60 >> 0) / 10 >> 0) + str(
         (t % 60 >> 0) % 10)
 
-# TODO: separate out Date and Time from Start
-logged_values=[]
-
-logged_values.append([ _('date'),  lambda :time.strftime('%Y-%m-%d', time.gmtime(now - lrun[2])) ])
-
-logged_values.append([ _('start'), lambda : time.strftime('%H:%M:%S', time.gmtime(now - lrun[2])) ])
-
-logged_values.append([ _('station'), lambda : str(lrun[0]) ])
-
 logged_values.append([ _('duration'), lambda : timestr(lrun[2]) ])
 
 logged_values.append([_('program'), lambda :_('Run_once') if lrun[1] == 98
                                             else (_('Manual') if lrun[1] == 99
-                                            else (str(lrun[1]))
-                                            ) ])
+                                            else (str(lrun[1]))) ])
 
 try:
     with open('./data/sd.json', 'r') as sdf:  # A config file
